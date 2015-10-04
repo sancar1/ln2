@@ -64,6 +64,8 @@ public PlayerSpawn(client)
 
 stock StripAllWeapons(client)
 {
+	PrintToChat(client, "%N weapons have been stripped.");
+	
 	new iEnt;
 	for (new i = 0; i <= 5; i++)
 	{
@@ -72,7 +74,6 @@ stock StripAllWeapons(client)
 			{
 				RemovePlayerItem(client, iEnt);
 				RemoveEdict(iEnt);
-				PrintToChat(client, "%N weapons have been stripped.");
 			}
 	}
 }
@@ -80,6 +81,9 @@ stock StripAllWeapons(client)
 public void Event_OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	new attackerId = GetEventInt(event, "attacker");
+	new attacker = GetClientOfUserId(attackerId);
+	
 	if(IsClientInGame(client) && IsClientInGame(client))
 		{
 			if(IsPlayerAlive(client) && IsPlayerAlive(client))
@@ -88,7 +92,9 @@ public void Event_OnPlayerHurt(Event event, const char[] name, bool dontBroadcas
 				GetClientAbsAngles(client, g_clientAngles[client]);	// get clients angles
 				PrintToChat(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
 				
-				StripAllWeapons(client); //strip player weapons
+				
+				TeleportEntity(attacker, g_clientOrigin[client], g_clientAngles[client], NULL_VECTOR);
+				PrintToChat(client, "%N Position is: %0.0f", attacker, g_clientOrigin[client]);	// print to chat origin
 			}
 		}
 	PrintToChat(client, "[Event] Player Hurt.");
