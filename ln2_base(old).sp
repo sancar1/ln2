@@ -77,7 +77,6 @@ stock StripAllWeapons(client)
 
 public void Event_OnPlayerHurt(Event event, const char[] name, bool dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(IsClientInGame(client) && IsClientInGame(client))
 		{
 			if(IsPlayerAlive(client) && IsPlayerAlive(client))
@@ -95,17 +94,8 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 	// Get event info - Copied from respawn plugin
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	//new team = GetClientTeam(client);
-	new attackerId = GetEventInt(event, "attacker");
-	new attacker = GetClientOfUserId(attackerId);
-	
-	
-	char weapon[64];
-	bool headshot = event.GetBool("headshot");
-	event.GetString("weapon", weapon, sizeof(weapon));
- 
-	char name[64];
-
-	GetClientName(attacker, name, sizeof(name));
+	//new attackerId = GetEventInt(event, "attacker");
+	//new attacker = GetClientOfUserId(attackerId);
    
 	if(IsClientInGame(client) && IsClientInGame(client))
 			{
