@@ -90,7 +90,7 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 					GetClientAbsOrigin(client, g_clientOrigin[client]);	// get clients origin
 					GetClientAbsAngles(client, g_clientAngles[client]);	// get clients angles
 					
-					//PrintToChatAll(client, "%N Position is: g_clientOrigin[client]");	// print to chat origin
+					PrintToChatAll(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
 					
 					CS_RespawnPlayer(client);	// respawn player
 					g_clientToggled[client] = true;
