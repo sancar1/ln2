@@ -9,7 +9,7 @@
 // This will be used for checking which team the player is on before respawning them
 #define SPECTATOR_TEAM 0
 
-new bool:g_clientToggled[MAXPLAYERS+1];
+new bool:g_clientToggled[MAXPLAYERS + 1];
 new Float:g_clientOrigin[MAXPLAYERS + 1][3];
 new Float:g_clientAngles[MAXPLAYERS + 1][3];
 
@@ -83,14 +83,14 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 	//new attackerId = GetEventInt(event, "attacker");
 	//new attacker = GetClientOfUserId(attackerId);
    
-   if(IsClientInGame(client) && IsClientInGame(client))
+	if(IsClientInGame(client) && IsClientInGame(client))
 			{
 				if(IsPlayerAlive(client) && IsPlayerAlive(client))
 				{
 					GetClientAbsOrigin(client, g_clientOrigin[client]);	// get clients origin
 					GetClientAbsAngles(client, g_clientAngles[client]);	// get clients angles
 					
-					PrintToChatAll(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
+					PrintToChat(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
 					
 					CS_RespawnPlayer(client);	// respawn player
 					g_clientToggled[client] = true;
