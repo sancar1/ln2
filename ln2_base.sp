@@ -26,7 +26,7 @@ public Plugin:myinfo =
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_frozen", ToggleFrozen); // client command to force your frozen status.
-	HookEvent("player_spawned", Event_OnPlayerSpawn);
+	HookEvent("player_spawn", Event_OnPlayerSpawn);
 	HookEvent("player_hurt", Event_OnPlayerHurt);
 	HookEvent("player_death", Event_OnPlayerDeath);
 }
@@ -48,16 +48,18 @@ public Action:Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBr
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(client != 0 && g_clientToggled[client] == true)
 	{	
+		PrintToChat(client, "[Event] Player Spawn - Frozen.");
 		PlayerSpawn(client);
 	}
+	PrintToChat(client, "[Event] Player Spawn.");
 	return Plugin_Continue;
 }
 
 public PlayerSpawn(client)
 {
 	StripAllWeapons(client); //strip player weapons
-	PrintToChat(client, "%N Weapons were stripped.");
 	TeleportEntity(client, g_clientOrigin[client], g_clientAngles[client], NULL_VECTOR);
+	PrintToChat(client, "[Event] Player Spawn.");
 }
 
 stock StripAllWeapons(client)
@@ -85,8 +87,11 @@ public void Event_OnPlayerHurt(Event event, const char[] name, bool dontBroadcas
 				GetClientAbsOrigin(client, g_clientOrigin[client]);	// get clients origin
 				GetClientAbsAngles(client, g_clientAngles[client]);	// get clients angles
 				PrintToChat(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
+				
+				StripAllWeapons(client); //strip player weapons
 			}
 		}
+	PrintToChat(client, "[Event] Player Hurt.");
 }
  
 public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -95,31 +100,19 @@ public void Event_OnPlayerDeath(Event event, const char[] name, bool dontBroadca
 	// Get event info - Copied from respawn plugin
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	//new team = GetClientTeam(client);
-	new attackerId = GetEventInt(event, "attacker");
-	new attacker = GetClientOfUserId(attackerId);
-	
-	
-	char weapon[64];
-	bool headshot = event.GetBool("headshot");
-	event.GetString("weapon", weapon, sizeof(weapon));
- 
-	char name[64];
-
-	GetClientName(attacker, name, sizeof(name));
+	//new attackerId = GetEventInt(event, "attacker");
+	//new attacker = GetClientOfUserId(attackerId);
    
-	if(IsClientInGame(client) && IsClientInGame(client))
+	if(IsClientInGame(client))
 			{
-				if(IsPlayerAlive(client) && IsPlayerAlive(client))
-				{				
-					PrintToChat(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
-					PrintToConsole(client, "You were killed by \"%s\" (weapon \"%s\") (headshot \"%d\")", name, weapon, headshot);
+				PrintToChat(client, "%N Position is: %0.0f", client, g_clientOrigin[client]);	// print to chat origin
 					
-					g_clientToggled[client] = true;
-					CS_RespawnPlayer(client);	// respawn player
-				}
+				g_clientToggled[client] = true;
+				CS_RespawnPlayer(client);	// respawn player
 			}
  
    /* CODE */
+	PrintToChat(client, "[Event] Player Dead.");
 }
 
 public OnClientDisconnect(client){
