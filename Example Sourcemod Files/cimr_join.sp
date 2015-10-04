@@ -20,13 +20,13 @@ public Plugin:myinfo =
 	version = "1.0",
 	url = "http://cimr.site.nfoservers.com/sourcebans/"
 };
+
 public OnPluginStart()
 {
 	// Register Console Commands
 	RegConsoleCmd("sm_ct", ct, "Move your self to ct team", FCVAR_PLUGIN);
 	RegConsoleCmd("sm_t", t, "Move your self to t team", FCVAR_PLUGIN);
 }
-
 
 public Action:t(target, args){
 
