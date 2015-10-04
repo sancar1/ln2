@@ -8,9 +8,6 @@
 
 // This will be used for checking which team the player is on before respawning them
 #define SPECTATOR_TEAM 0
-#define TEAM_SPEC      1
-#define TEAM_1         2
-#define TEAM_2         3
 
 public Plugin:myinfo = 
 {
