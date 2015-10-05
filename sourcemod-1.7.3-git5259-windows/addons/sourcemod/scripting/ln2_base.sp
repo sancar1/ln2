@@ -8,11 +8,16 @@
 
 // This will be used for checking which team the player is on before respawning them
 #define SPECTATOR_TEAM 0
+#define DEFAULT_TIMER_FLAGS TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE
 
 new bool:g_clientToggled[MAXPLAYERS + 1];
 new bool:g_bPause[MAXPLAYERS + 1];
 new Float:g_clientOrigin[MAXPLAYERS + 1][3];
 new Float:g_clientAngles[MAXPLAYERS + 1][3];
+
+new g_FreezeSerial[MAXPLAYERS+1] = { 0, ... };
+new g_FreezeTime[MAXPLAYERS+1] = { 0, ... };
+new g_Serial_Gen = 0;
 
 new g_Offset_CollisionGroup;
 
@@ -63,7 +68,7 @@ public Action:Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBr
 		StripAllWeapons(client); 																// remove weapons from player
 		TeleportEntity(client, g_clientOrigin[client], g_clientAngles[client], NULL_VECTOR); 	// teleport player to death location
 		PrintToChatAll("[Event] %N is teleported to: %0.0f", client, g_clientOrigin[client]); 	// print to chat player is teleported
-		FreezePlayer(client); 																	// freeze player in place
+		FreezeClient(client); 																	// freeze player in place
 	}
 	return Plugin_Continue;
 }
@@ -189,7 +194,67 @@ public UnFreezePlayer(client)
 {
     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
     SetEntityRenderColor(client, 255, 255, 255, 255);
-}  
+} 
+
+public FreezeClient(client)
+{
+	int time = 30000;
+	
+	if (g_FreezeSerial[client] != 0)
+	{
+		UnfreezeClient(client);
+		return;
+	}
+	
+	StripAllWeapons(client);
+	SetEntityMoveType(client, MOVETYPE_NONE);
+	SetEntityRenderColor(client, 0, 128, 255, 192);
+
+	g_FreezeTime[client] = time;
+	g_FreezeSerial[client] = ++g_Serial_Gen;
+	
+	PrintToChatAll("%N Frozen at: %0.0f. Serial Gen: %i", client, g_clientOrigin[client], g_Serial_Gen); 	
+	CreateTimer(1.0, Timer_Freeze, client | (g_Serial_Gen << 7), DEFAULT_TIMER_FLAGS);
+}
+
+public UnfreezeClient(client)
+{
+	g_FreezeSerial[client] = 0;
+	g_FreezeTime[client] = 0;
+
+	if (IsClientInGame(client))
+	{
+		SetEntityMoveType(client, MOVETYPE_WALK);
+		SetEntityRenderColor(client, 255, 255, 255, 255);
+		PrintToChatAll("%N is unfrozen!", client);	
+	}
+}
+
+public Action:Timer_Freeze(Handle:timer, any:value)
+{
+	new client = value & 0x7f;
+	new serial = value >> 7;
+
+	if (!IsClientInGame(client)
+		|| !IsPlayerAlive(client)
+		|| g_FreezeSerial[client] != serial)
+	{
+		UnfreezeClient(client);
+	}
+
+	if (g_FreezeTime[client] == 0)
+	{
+		UnfreezeClient(client);
+		PrintCenterText(client, "%t", "Unfrozen");
+	}
+	
+	PrintToChatAll("%N is frozen! Freezetime: %i", client, g_FreezeTime[client]);	
+	g_FreezeTime[client]--;
+	SetEntityMoveType(client, MOVETYPE_NONE);
+	SetEntityRenderColor(client, 0, 128, 255, 135);
+
+	return Plugin_Continue;
+}
 
 stock UnblockEntity(client, cachedOffset)
 {
