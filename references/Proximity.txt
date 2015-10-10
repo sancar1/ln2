@@ -1,0 +1,14 @@
+: int ClosestDistance = 200;
+decl Float:clientpos[3], Float:frozenplayerpos[3];
+ 
+GetClientAbsOrigin(frozenplayer, frozenplayerpos);
+ 
+for(new client = 1; client <= MaxClients; client++)
+{
+        if(IsClientInGame(client) && IsPlayerAlive(client)))
+        {
+                GetClientAbsOrigin(client, clientpos);
+                if(GetVectorDistance(clientpos, frozenplayerpos) < ClosestDistance)
+                        PrintToChatAll("frozen player %d is near player %d", frozenplayer, client);
+        }
+}
