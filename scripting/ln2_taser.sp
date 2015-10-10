@@ -1,40 +1,17 @@
-#pragma semicolon 1
-
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
-#include <ln2_base>
+#include <ln2_base.sp>
 
 #define PLUGIN_VERSION "1.0"
+
+#pragma semicolon 1
 
 new iAmmoOffset = -1;
 new iClip1Offset = -1;
 
 new Handle:hOnSpawnTaser, bool:bOnSpawnTaser;
 
-public Plugin:myinfo =
-{
-	name 		= "Unfreeze Taser",
-	author 		= "Josh",
-	description 	= "Unfreeze player with zues in freezetag.",
-	version 		= PLUGIN_VERSION,
-	url 			= ""
-}
-
-public OnPluginStart()
-{
-	hOnSpawnTaser = CreateConVar("sm_ln2_taser", "1", "On/Off free taser on spawn.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	bOnSpawnTaser = GetConVarBool(hOnSpawnTaser);
-
-	HookEvent("player_spawn", Event_PlayerSpawn);
-	HookEvent("weapon_fire", Event_WeaponFire);
-	HookEvent("bullet_impact", Event_BulletImpact);
-
-	HookConVarChange(hOnSpawnTaser, OnConVarChange);
-
-	iAmmoOffset = FindSendPropInfo("CBasePlayer", "m_iAmmo");
-	iClip1Offset = FindSendPropInfo("CWeaponTaser", "m_iClip1");
-}
 
 public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newValue[])
 {
@@ -112,9 +89,9 @@ public LookAtCheck(client)
 			PrintToChat(client, "[PlayerCheck] \x03Trying to set color for this player...");
 			SetEntityRenderMode(lookingAtClient, RENDER_TRANSCOLOR);
 			SetEntityRenderColor(lookingAtClient, 255, 0, 0, 255);
+			UnfreezeTaserTimer(lookingAtClient);
 		}
     }
-	UnfreezeTaserTimer(lookingAtClient);
 }
 
 public UnfreezeTaserTimer(lookingAtClient)
