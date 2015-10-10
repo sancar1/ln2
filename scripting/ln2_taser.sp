@@ -64,7 +64,7 @@ public Event_WeaponFire(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(!client)
-		return;
+		return Plugin_Continue;
 
 	new client_team = GetClientTeam(client);
 	if(client_team > 2)
@@ -76,7 +76,6 @@ public Event_WeaponFire(Handle:event, const String:name[], bool:dontBroadcast)
 			if (IsClientInGame(client) && IsPlayerAlive(client))
 			{
 				LookAtCheck(client);
-				UnfreezeTaserTimer(lookingAtClient);
 				
 				new iWeapon;
 				iWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
@@ -88,7 +87,6 @@ public Event_WeaponFire(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
-	else
 }
 
 public LookAtCheck(client)
@@ -100,12 +98,10 @@ public LookAtCheck(client)
     if(lookingAtClient == -1)
 	{
         PrintToChat(client, "[PlayerCheck] You aren't looking at the player right now.");
-        return Plugin_Continue;
     }
     else if(lookingAtClient == -2)
 	{
 		PrintToChat(client, "[PlayerCheck] You already look at player which is not supported.");
-        return Plugin_Continue;
     }
     else
 	{
@@ -116,9 +112,9 @@ public LookAtCheck(client)
 			PrintToChat(client, "[PlayerCheck] \x03Trying to set color for this player...");
 			SetEntityRenderMode(lookingAtClient, RENDER_TRANSCOLOR);
 			SetEntityRenderColor(lookingAtClient, 255, 0, 0, 255);
-			return lookingAtClient;
 		}
     }
+	UnfreezeTaserTimer(lookingAtClient);
 }
 
 public UnfreezeTaserTimer(lookingAtClient)
