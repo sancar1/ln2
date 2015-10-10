@@ -48,17 +48,24 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_frozen", ToggleFrozen); 													// client command to force your frozen status
 	HookEvent("player_spawn", Event_OnPlayerSpawn);												// hook for when a player spawns
 	HookEvent("player_death", Event_OnPlayerDeath);												// hook for when a player dies
+	HookEvent("weapon_fire", Event_WeaponFire);													// hook for when player fires weapon
 	
 	hOnSpawnTaser = CreateConVar("sm_ln2_taser", "1", "On/Off free taser on spawn.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	bOnSpawnTaser = GetConVarBool(hOnSpawnTaser);
 
-	HookEvent("player_spawn", Event_PlayerSpawn);
-	HookEvent("weapon_fire", Event_WeaponFire);
 
 	HookConVarChange(hOnSpawnTaser, OnConVarChange);
 
 	iAmmoOffset = FindSendPropInfo("CBasePlayer", "m_iAmmo");
 	iClip1Offset = FindSendPropInfo("CWeaponTaser", "m_iClip1");
+}
+
+public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newValue[])
+{
+	if (hCvar == hOnSpawnTaser)
+	{
+		bOnSpawnTaser = bool:StringToInt(newValue);
+	}
 }
 
 public Action:ToggleFrozen(client, args){
@@ -77,6 +84,8 @@ public Action:Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBr
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid")); 								// get client info
 	//PrintToChatAll("[Event] %N Spawn.", client); 												// print to chat player has spawned
+	
+	CreateTimer(0.1, Event_HandleSpawn, GetEventInt(event, "userid"));
 	
 	if(client != 0 && g_clientFrozen[client] == true) 											// if the player is indicated as frozen
 	{	
@@ -145,6 +154,7 @@ public UnFreezePlayer(client)
 {
     SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 1.0);
     SetEntityRenderColor(client, 255, 255, 255, 255);
+	g_clientFrozen[client] = false;
 } 
 
 public Action:Timer_Freeze(Handle:timer, any:value)
@@ -171,24 +181,6 @@ stock UnblockEntity(client, cachedOffset)
 	SetEntData(client, cachedOffset, 2, 4, true);
 }
 
-
-
-
-
-
-public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newValue[])
-{
-	if (hCvar == hOnSpawnTaser)
-	{
-		bOnSpawnTaser = bool:StringToInt(newValue);
-	}
-}
-
-public Event_PlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
-{
-	CreateTimer(0.1, Event_HandleSpawn, GetEventInt(event, "userid"));
-}
-
 public Action:Event_HandleSpawn(Handle:timer, any:user_index)
 {
 	new client = GetClientOfUserId(user_index);
@@ -198,7 +190,7 @@ public Action:Event_HandleSpawn(Handle:timer, any:user_index)
     }
 
 	new client_team = GetClientTeam(client);
-	if ((client_team > 2) && (bOnSpawnTaser))
+	if ((client_team >= 2) && (bOnSpawnTaser))
 	{
 		GivePlayerItem(client, "weapon_taser");
 	}
