@@ -4,6 +4,7 @@
 #include <sdkhooks>
 #include <clientprefs>
 #include <ln2_taser>
+#include <ln2_cop>
 
 #pragma semicolon 1
 
