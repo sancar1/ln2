@@ -3,6 +3,7 @@
 #include <cstrike>
 #include <sdkhooks>
 #include <clientprefs>
+#include <ln2_taser>
 
 #pragma semicolon 1
 
