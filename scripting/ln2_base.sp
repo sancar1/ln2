@@ -135,6 +135,8 @@ public Action:Timer_Freeze(Handle:timer, any:value)
 		SetEntPropFloat(client, Prop_Data, "m_flLaggedMovementValue", 0.0); 						// makes player frozen
 		//SetEntPropVector(client,Prop_Data,"m_vecVelocity",f_Velocity);							// set player velocity to velocity vector
 		SetEntityRenderColor(client, 0, 128, 255, 192);	
+		
+		SetEntProp(client, Prop_Data, "m_takedamage", 0, 1);								// godmode frozen player
 	
 		SetEntProp(client, Prop_Send, "m_CollisionGroup", 1); 
 		//g_Offset_CollisionGroup = FindSendPropOffs("CBaseEntity", "m_CollisionGroup");			// get the play collision info
