@@ -1,0 +1,11 @@
+https://forums.alliedmods.net/showthread.php?t=272829												// Beam around client
+
+https://developer.valvesoftware.com/wiki/List_of_CS_GO_Particles									// Csgo Particle List
+
+https://forums.alliedmods.net/showthread.php?p=2346955#post2346955									// Weapon Render
+
+https://forums.alliedmods.net/showthread.php?t=272817												// Detect player press button
+
+https://sm.alliedmods.net/new-api/sdktools_functions/GetClientAimTarget
+
+weapon_tracers_taser		// Zeus Particle

@@ -3,38 +3,34 @@
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
+#include <ln2_base>
 
 #define PLUGIN_VERSION "1.0"
 
 new iAmmoOffset = -1;
 new iClip1Offset = -1;
 
-new Handle:hFreeTaser, bool:bFreeTaser,
-	Handle:hInfTaser, bool:bInfTaser;
+new Handle:hOnSpawnTaser, bool:bOnSpawnTaser;
 
 public Plugin:myinfo =
 {
-	name 		= "[CSGO] Free taser",
-	author 		= "Grey83",
-	description 	= "Give free and/or infinite taser to player on spawn in CSGO",
+	name 		= "Unfreeze Taser",
+	author 		= "Josh",
+	description 	= "Unfreeze player with zues in freezetag.",
 	version 		= PLUGIN_VERSION,
 	url 			= ""
 }
 
 public OnPluginStart()
 {
-	CreateConVar("csgo_taser_version", PLUGIN_VERSION, "[CSGO] Free taser version", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED|FCVAR_SPONLY|FCVAR_DONTRECORD);
-	hFreeTaser = CreateConVar("sm_taser_free", "1", "On/Off free taser on spawn.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	hInfTaser = CreateConVar("sm_taser_inf", "1", "On/Off Infinite taser.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-
-	bFreeTaser = GetConVarBool(hFreeTaser);
-	bInfTaser= GetConVarBool(hInfTaser);
+	hOnSpawnTaser = CreateConVar("sm_ln2_taser", "1", "On/Off free taser on spawn.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	bOnSpawnTaser = GetConVarBool(hOnSpawnTaser);
 
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("weapon_fire", Event_WeaponFire);
+	HookEvent("bullet_impact", Event_BulletImpact);
 
-	HookConVarChange(hFreeTaser, OnConVarChange);
-	HookConVarChange(hInfTaser, OnConVarChange);
+	HookConVarChange(hOnSpawnTaser, OnConVarChange);
 
 	iAmmoOffset = FindSendPropInfo("CBasePlayer", "m_iAmmo");
 	iClip1Offset = FindSendPropInfo("CWeaponTaser", "m_iClip1");
@@ -42,13 +38,9 @@ public OnPluginStart()
 
 public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newValue[])
 {
-	if (hCvar == hFreeTaser)
+	if (hCvar == hOnSpawnTaser)
 	{
-		bFreeTaser = bool:StringToInt(newValue);
-	}
-	else if (hCvar == hInfTaser)
-	{
-		bInfTaser = bool:StringToInt(newValue);
+		bOnSpawnTaser = bool:StringToInt(newValue);
 	}
 }
 
@@ -64,36 +56,72 @@ public Action:Event_HandleSpawn(Handle:timer, any:user_index)
 		return;
 
 	new client_team = GetClientTeam(client);
-	if ((client_team > 2) && (bFreeTaser))
+	if ((client_team > 2) && (bOnSpawnTaser))
 		GivePlayerItem(client, "weapon_taser");
 }
 
 public Event_WeaponFire(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	if (bInfTaser)
-	{
-		new client = GetClientOfUserId(GetEventInt(event, "userid"));
-		if(!client)
-			return;
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	if(!client)
+		return;
 
-		new client_team = GetClientTeam(client);
-		if(client_team > 2)
+	new client_team = GetClientTeam(client);
+	if(client_team > 2)
+	{
+		new String: weapon[64];
+		GetEventString(event, "weapon", weapon, sizeof(weapon));
+		if(StrEqual("taser", weapon))
 		{
-			new String: weapon[64];
-			GetEventString(event, "weapon", weapon, sizeof(weapon));
-			if(StrEqual("taser", weapon))
+			if (IsClientInGame(client) && IsPlayerAlive(client))
 			{
-				if (IsClientInGame(client) && IsPlayerAlive(client))
+				LookAtCheck(client);
+				UnfreezeTaserTimer(lookingAtClient);
+				
+				new iWeapon;
+				iWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+				if (IsValidEdict(iWeapon))
 				{
-					new iWeapon;
-					iWeapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-					if (IsValidEdict(iWeapon))
-					{
- 						if (iAmmoOffset)
-							SetEntData(iWeapon, iClip1Offset, 2, _, true);
-					}
+ 					if (iAmmoOffset)
+						SetEntData(iWeapon, iClip1Offset, 2, _, true);
 				}
 			}
 		}
 	}
+	else
+}
+
+public LookAtCheck(client)
+{
+    new lookingAtClient;
+	new client_team = GetClientTeam(client);
+	
+	lookingAtClient = GetClientAimTarget(client, true);
+    if(lookingAtClient == -1)
+	{
+        PrintToChat(client, "[PlayerCheck] You aren't looking at the player right now.");
+        return Plugin_Continue;
+    }
+    else if(lookingAtClient == -2)
+	{
+		PrintToChat(client, "[PlayerCheck] You already look at player which is not supported.");
+        return Plugin_Continue;
+    }
+    else
+	{
+		new lookingAtClient_team = GetClientTeam(lookingAtClient);
+		if (client_team == lookingAtClient_team)
+		{
+			PrintToChat(client, "[PlayerCheck] Player index you're looking at: \x03%d", lookingAtClient);
+			PrintToChat(client, "[PlayerCheck] \x03Trying to set color for this player...");
+			SetEntityRenderMode(lookingAtClient, RENDER_TRANSCOLOR);
+			SetEntityRenderColor(lookingAtClient, 255, 0, 0, 255);
+			return lookingAtClient;
+		}
+    }
+}
+
+public UnfreezeTaserTimer(lookingAtClient)
+{
+	UnfreezePlayer(lookingAtClient);
 }
