@@ -134,7 +134,7 @@ public OnPlayerEvents(Handle:event, const String:name[], bool:dontBroadcast)
 			if (IsUsingESP[client])
 			{
 				// Otherwise disable ESP
-				//ToggleAdminESP(client, false);
+				ToggleAdminESP(client, false);
 			}
 		}
 		else if (CheckCommandAccess(client, "csgo_admin_esp", ADMFLAG_CHEATS))
