@@ -34,7 +34,7 @@ new iAmmoOffset = -1;
 new iClip1Offset = -1;
 
 new Handle:hOnSpawnTaser, bool:bOnSpawnTaser;
-//new Handle:hProximityDistance, g_ProximityDistance;
+new Handle:hTaserProximity, Float:g_fTaserProximity;
 
 /*
 * A list of improvements to make:
@@ -64,15 +64,18 @@ public void OnPluginStart()
 	HookEvent("weapon_fire", Event_WeaponFire);													// hook for when player fires weapon
 	
 	hOnSpawnTaser = CreateConVar("sm_ln2_taser", "1", "On/Off free taser on spawn.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	//hProximityDistance = CreateConVar("sm_ln2_proximity", "1000", "Proximity Distance to Unfreeze Player.", FCVAR_NOTIFY, true, 1.0, true, 9999.0);
-	bOnSpawnTaser = GetConVarBool(hOnSpawnTaser);
-	//g_ProximityDistance = GetConVarInt(hProximityDistance);
+	hTaserProximity = CreateConVar("sm_ln2_proximity", "7.5", "Proximity Distance to Unfreeze Player. Multiples of 100.", FCVAR_NOTIFY, true, 1.0, true, 30.0);
 	
-	//HookConVarChange(g_ProximityDistance, OnConVarChange);
+	bOnSpawnTaser = GetConVarBool(hOnSpawnTaser);
+	g_fTaserProximity = GetConVarFloat(hTaserProximity);
+	
+	HookConVarChange(hTaserProximity, OnConVarChange);
 	HookConVarChange(hOnSpawnTaser, OnConVarChange);
 
 	iAmmoOffset = FindSendPropInfo("CBasePlayer", "m_iAmmo");
 	iClip1Offset = FindSendPropInfo("CWeaponTaser", "m_iClip1");
+	
+	AutoExecConfig(true, "ln2_commands");														// automatically read/create a ConVar configuration file
 }
 
 public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newValue[])
@@ -82,10 +85,10 @@ public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newVal
 		bOnSpawnTaser = bool:StringToInt(newValue);
 	}
 	
-	//else if (hCvar == hProximityDistance)
-	//{
-	//	g_ProximityDistance = StringToInt(newValue);
-	//}
+	else if (hCvar == hTaserProximity)
+	{
+		g_fTaserProximity = StringToFloat(newValue);
+	}
 }
 
 //===================================================================================================================
@@ -309,13 +312,14 @@ stock UnblockEntity(client, cachedOffset)
 
 stock TaserProximityCheck(client, lookingAtClient)
 {
-	int ClosestDistance = 1000;
+	g_fTaserProximity = g_fTaserProximity * 100;
+	new Float:ClosestDistance = g_fTaserProximity;										// Taser Distance (750 default)
 	GetClientAbsOrigin(client, g_clientOrigin[client]);								// get clients origin
 	GetClientAbsOrigin(lookingAtClient, g_clientOrigin[lookingAtClient]);					// get lookingAtClients origin
 	
 	if(GetVectorDistance(g_clientOrigin[client], g_clientOrigin[lookingAtClient]) < ClosestDistance)
 	{
-		//PrintToChat(client, "[%cFreezetag%c] %c%N%c is just right.", DARKRED,WHITE,GREEN, lookingAtClient, WHITE);
+		PrintToChat(client, "[%cFreezetag%c] %c%N%c is just right. Max Distance: %f", DARKRED,WHITE,GREEN, lookingAtClient, WHITE, ClosestDistance);
 		return true;
 	}
 	else
