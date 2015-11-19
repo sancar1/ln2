@@ -3,12 +3,19 @@
 #include <cstrike>
 #include <sdkhooks>
 #include <clientprefs>
+#include <colors>
 
 #pragma semicolon 1
 
 // This will be used for checking which team the player is on before respawning them
 #define SPECTATOR_TEAM 0
 #define DEFAULT_TIMER_FLAGS TIMER_FLAG_NO_MAPCHANGE
+
+#define WHITE 0x01
+#define DARKRED 0x02
+#define GREEN 0x04
+#define YELLOW 0x09
+#define DARKBLUE 0x0C
 
 
 new g_iTotalTs;
@@ -27,6 +34,7 @@ new iAmmoOffset = -1;
 new iClip1Offset = -1;
 
 new Handle:hOnSpawnTaser, bool:bOnSpawnTaser;
+//new Handle:hProximityDistance, g_ProximityDistance;
 
 /*
 * A list of improvements to make:
@@ -56,9 +64,11 @@ public void OnPluginStart()
 	HookEvent("weapon_fire", Event_WeaponFire);													// hook for when player fires weapon
 	
 	hOnSpawnTaser = CreateConVar("sm_ln2_taser", "1", "On/Off free taser on spawn.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	//hProximityDistance = CreateConVar("sm_ln2_proximity", "1000", "Proximity Distance to Unfreeze Player.", FCVAR_NOTIFY, true, 1.0, true, 9999.0);
 	bOnSpawnTaser = GetConVarBool(hOnSpawnTaser);
-
-
+	//g_ProximityDistance = GetConVarInt(hProximityDistance);
+	
+	//HookConVarChange(g_ProximityDistance, OnConVarChange);
 	HookConVarChange(hOnSpawnTaser, OnConVarChange);
 
 	iAmmoOffset = FindSendPropInfo("CBasePlayer", "m_iAmmo");
@@ -71,6 +81,11 @@ public OnConVarChange(Handle:hCvar, const String:oldValue[], const String:newVal
 	{
 		bOnSpawnTaser = bool:StringToInt(newValue);
 	}
+	
+	//else if (hCvar == hProximityDistance)
+	//{
+	//	g_ProximityDistance = StringToInt(newValue);
+	//}
 }
 
 //===================================================================================================================
@@ -245,11 +260,14 @@ public LookAtCheck(client)
 	if(lookingAtClient >= 0)
 	{
 		new lookingAtClient_team = GetClientTeam(lookingAtClient);
-		if (client_team == lookingAtClient_team)
+		if (client_team == lookingAtClient_team && g_clientFrozen[lookingAtClient])
 		{
-			SetEntityRenderMode(lookingAtClient, RENDER_TRANSCOLOR);
-			SetEntityRenderColor(lookingAtClient, 255, 0, 0, 255);
-			UnfreezeTaserTimer(lookingAtClient);
+			if(TaserProximityCheck(client, lookingAtClient))
+			{
+				SetEntityRenderMode(lookingAtClient, RENDER_TRANSCOLOR);
+				SetEntityRenderColor(lookingAtClient, 255, 0, 0, 255);
+				UnfreezeTaserTimer(lookingAtClient);
+			}
 		}
     }
 }
@@ -287,6 +305,24 @@ stock ClientDefault(client)
 stock UnblockEntity(client, cachedOffset)
 {
 	SetEntData(client, cachedOffset, 2, 4, true);
+}
+
+stock TaserProximityCheck(client, lookingAtClient)
+{
+	int ClosestDistance = 1000;
+	GetClientAbsOrigin(client, g_clientOrigin[client]);								// get clients origin
+	GetClientAbsOrigin(lookingAtClient, g_clientOrigin[lookingAtClient]);					// get lookingAtClients origin
+	
+	if(GetVectorDistance(g_clientOrigin[client], g_clientOrigin[lookingAtClient]) < ClosestDistance)
+	{
+		//PrintToChat(client, "[%cFreezetag%c] %c%N%c is just right.", DARKRED,WHITE,GREEN, lookingAtClient, WHITE);
+		return true;
+	}
+	else
+	{
+		PrintToChat(client, "[%cFreezetag%c] %c%N%c is too far away.", DARKRED,WHITE,GREEN, lookingAtClient, WHITE);
+		return false;
+	}
 }
 
 stock StripAllWeapons(client)
@@ -347,6 +383,7 @@ stock ThirdPerson(client){
 }
 
 //===================================================================================================================
+// End Round Check
 CheckFrozen() {
 
 	g_iTotalTs = 0;
